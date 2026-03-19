@@ -1,0 +1,16 @@
+{
+  "folders": [
+    {
+      "name": "auth_service",
+      "path": "auth_service"
+    },
+    {
+      "name": "bot_service",
+      "path": "bot_service"
+    }
+  ],
+  "settings": {
+    "python.terminal.activateEnvironment": false,
+    "python.terminal.activateEnvInCurrentTerminal": false
+  }
+}
