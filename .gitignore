@@ -39,4 +39,6 @@ celerybeat-schedule.db
 celerybeat.pid
 
 # Docker
-*.pid
+*.pid.DS_Store
+._.DS_Store
+**/.DS_Store
