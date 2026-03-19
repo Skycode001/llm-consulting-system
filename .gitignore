@@ -1,17 +1,27 @@
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
+# Virtual environments (для обоих сервисов)
 env/
 venv/
-.venv/
-ENV/
-env.bak/
-venv.bak/
-*.db
-*.db-journal
+.venv
+auth_service/.venv/
+bot_service/.venv/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+auth_service/.env
+bot_service/.env
+*.env
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+.ruff_cache/
+.mypy_cache/
+.pytest_cache/
 
 # IDE
 .vscode/
@@ -20,25 +30,111 @@ venv.bak/
 *.swo
 *~
 
-# Environment
-.env
-.env.local
-.env.*.local
+# Database (для auth_service)
+*.db
+*.db-journal
+*.sqlite3
+*.sqlite
+auth_service/*.db
+auth_service/*.sqlite
+auth_service/*.sqlite3
 
 # Logs
-*.log
 logs/
+*.log
+auth_service/logs/
+bot_service/logs/
+*.log.*
 
-# Test
-.pytest_cache/
+# Testing
 .coverage
 htmlcov/
+.pytest_cache/
+.coverage.*
+*.cover
+.pytest_cache/
+tests/.pytest_cache/
 
-# Celery
+# Ruff (линтер)
+.ruff_cache/
+**/.ruff_cache/
+
+# Celery (для bot_service)
 celerybeat-schedule.db
 celerybeat.pid
+*.pid
+bot_service/celerybeat-schedule.db
+
+# Redis dump (для bot_service)
+dump.rdb
+*.rdb
+
+# RabbitMQ data (если локально)
+rabbitmq-data/
+
+# macOS system files
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+*.DS_Store
+**/.DS_Store
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
 
 # Docker
-*.pid.DS_Store
-._.DS_Store
-**/.DS_Store
+*.pid
+docker-compose.override.yml
+.dockerignore
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+*.egg
+MANIFEST
+
+# Lock files (uv создает свой lock файл)
+uv.lock
+poetry.lock
+
+# Jupyter notebooks (на всякий случай)
+.ipynb_checkpoints/
+*.ipynb
+
+# VS Code settings (специфичные для проекта)
+.vscode/settings.json
+.vscode/launch.json
+
+# PyCharm
+.idea/
+*.iml
+*.iws
+.idea_modules/
+
+# Coverage reports
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+
+# Sphinx documentation
+docs/_build/
+docs/_static/
+docs/_templates/
+
+# Backup files
+*.bak
+*.tmp
+*.temp
