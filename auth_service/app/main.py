@@ -2,6 +2,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.openapi.utils import get_openapi
 
 from app.api.router import api_router
 from app.core.config import settings
@@ -37,6 +38,9 @@ app = FastAPI(
     lifespan=lifespan,
     docs_url="/docs" if settings.ENV != "production" else None,
     redoc_url=None,
+    swagger_ui_parameters={
+        "persistAuthorization": True,
+    }
 )
 
 # CORS middleware
@@ -60,3 +64,39 @@ async def health_check():
         "service": settings.APP_NAME,
         "environment": settings.ENV
     }
+
+
+# Настройка OpenAPI для авторизации
+def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+    
+    openapi_schema = get_openapi(
+        title=app.title,
+        version=app.version,
+        description=app.description,
+        routes=app.routes,
+    )
+    
+    # Добавляем схему безопасности для Bearer токена
+    openapi_schema["components"] = openapi_schema.get("components", {})
+    openapi_schema["components"]["securitySchemes"] = {
+        "BearerAuth": {
+            "type": "http",
+            "scheme": "bearer",
+            "bearerFormat": "JWT",
+            "description": "Введите JWT токен в формате: Bearer <token>"
+        }
+    }
+    
+    # Применяем безопасность ко всем эндпоинтам, кроме health
+    for path in openapi_schema["paths"]:
+        if path != "/health":
+            for method in openapi_schema["paths"][path]:
+                openapi_schema["paths"][path][method]["security"] = [{"BearerAuth": []}]
+    
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
+
+app.openapi = custom_openapi
