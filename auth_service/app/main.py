@@ -89,9 +89,19 @@ def custom_openapi():
         }
     }
     
-    # Применяем безопасность ко всем эндпоинтам, кроме health
+    # Применяем безопасность только к эндпоинтам, которые требуют авторизацию
+    # Исключаем /health, /api/auth/register, /api/auth/login
+    public_paths = ["/health", "/api/auth/register", "/api/auth/login"]
+    
     for path in openapi_schema["paths"]:
-        if path != "/health":
+        # Проверяем, не является ли путь публичным
+        is_public = False
+        for public_path in public_paths:
+            if path.startswith(public_path):
+                is_public = True
+                break
+        
+        if not is_public:
             for method in openapi_schema["paths"][path]:
                 openapi_schema["paths"][path][method]["security"] = [{"BearerAuth": []}]
     
