@@ -1,0 +1,81 @@
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: llm-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+    networks:
+      - llm-network
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: llm-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    restart: unless-stopped
+    networks:
+      - llm-network
+
+  auth-service:
+    build:
+      context: ./auth_service
+      dockerfile: Dockerfile
+    container_name: llm-auth
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./auth_service/.env
+    depends_on:
+      - redis
+      - rabbitmq
+    restart: unless-stopped
+    networks:
+      - llm-network
+
+  bot-service:
+    build:
+      context: ./bot_service
+      dockerfile: Dockerfile
+    container_name: llm-bot
+    ports:
+      - "8001:8001"
+    env_file:
+      - ./bot_service/.env
+    depends_on:
+      - redis
+      - rabbitmq
+      - auth-service
+    restart: unless-stopped
+    networks:
+      - llm-network
+
+  celery-worker:
+    build:
+      context: ./bot_service
+      dockerfile: Dockerfile.celery
+    container_name: llm-celery
+    env_file:
+      - ./bot_service/.env
+    depends_on:
+      - redis
+      - rabbitmq
+    restart: unless-stopped
+    networks:
+      - llm-network
+
+networks:
+  llm-network:
+    driver: bridge
+
+volumes:
+  redis-data:
+  rabbitmq-data:

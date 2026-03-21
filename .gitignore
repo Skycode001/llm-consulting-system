@@ -138,3 +138,7 @@ docs/_templates/
 *.bak
 *.tmp
 *.temp
+
+# Docker
+docker-compose.override.yml
+*.pid
