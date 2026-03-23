@@ -1,3 +1,4 @@
+import pytest
 from unittest.mock import patch
 
 from app.tasks.llm_tasks import llm_request
@@ -45,19 +46,16 @@ class TestCeleryTask:
             assert result["chat_id"] == 12345
             assert "Unexpected error" in result["error"]
     
-    def test_llm_request_retry_on_failure(self, mocker):
+    def test_llm_request_retry_on_failure(self):
         """Тест повторной попытки при ошибке"""
-        mock_self = mocker.Mock()
-        mock_self.request = mocker.Mock()
-        mock_self.request.retries = 0
-        mock_self.max_retries = 3
-        
         with patch("app.tasks.llm_tasks.call_openrouter") as mock_call:
             mock_call.return_value = {
                 "success": False,
                 "error": "Temporary error"
             }
             
-            result = llm_request(mock_self, 12345, "Тестовый вопрос")
+            result = llm_request(12345, "Тестовый вопрос")
             
             assert result["success"] is False
+            assert result["chat_id"] == 12345
+            assert result["error"] == "Temporary error"

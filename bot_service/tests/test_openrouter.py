@@ -1,5 +1,7 @@
+import pytest
+import json
 import respx
-from httpx import Response
+from httpx import Response, TimeoutException
 
 from app.core.config import settings
 from app.services.openrouter_client import call_openrouter
@@ -78,7 +80,7 @@ class TestOpenRouterClient:
     def test_call_openrouter_timeout(self):
         """Тест вызова OpenRouter с таймаутом"""
         url = f"{settings.OPENROUTER_BASE_URL}/chat/completions"
-        respx.post(url).mock(side_effect=TimeoutError())
+        respx.post(url).mock(side_effect=TimeoutException("Request timeout"))
         
         result = call_openrouter("Привет")
         
@@ -101,7 +103,7 @@ class TestOpenRouterClient:
         with respx.mock:
             url = f"{settings.OPENROUTER_BASE_URL}/chat/completions"
             respx.post(url).mock(return_value=Response(
-                200, 
+                200,
                 json={
                     "choices": [{"message": {"content": "Ответ"}}]
                 }
@@ -111,6 +113,6 @@ class TestOpenRouterClient:
             
             assert result["success"] is True
             assert len(respx.calls) == 1
-            request_json = respx.calls[0].request.json()
+            request_json = json.loads(respx.calls[0].request.content)
             assert request_json["messages"][0]["role"] == "user"
             assert request_json["messages"][0]["content"] == "Тестовый вопрос"

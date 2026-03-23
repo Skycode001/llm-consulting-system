@@ -1,7 +1,6 @@
-import logging
-from typing import Any, Dict, Optional
-
 import httpx
+import logging
+from typing import Dict, Any, Optional
 
 from app.core.config import settings
 
@@ -53,7 +52,15 @@ def call_openrouter(prompt: str, model: Optional[str] = None) -> Dict[str, Any]:
             
             if response.status_code == 200:
                 data = response.json()
-                content = data.get("choices", [{}])[0].get("message", {}).get("content", "")
+                choices = data.get("choices", [])
+                
+                if not choices:
+                    return {
+                        "success": False,
+                        "error": "Empty response from OpenRouter"
+                    }
+                
+                content = choices[0].get("message", {}).get("content", "")
                 
                 if content:
                     return {
@@ -63,7 +70,7 @@ def call_openrouter(prompt: str, model: Optional[str] = None) -> Dict[str, Any]:
                 else:
                     return {
                         "success": False,
-                        "error": "Empty response from OpenRouter"
+                        "error": "Empty content in OpenRouter response"
                     }
             else:
                 logger.error(f"OpenRouter API error: {response.status_code} - {response.text}")
@@ -72,7 +79,7 @@ def call_openrouter(prompt: str, model: Optional[str] = None) -> Dict[str, Any]:
                     "error": f"OpenRouter API returned {response.status_code}"
                 }
                 
-    except httpx.TimeoutException:
+    except (httpx.TimeoutException, TimeoutError):
         logger.error("OpenRouter API timeout")
         return {
             "success": False,
@@ -85,7 +92,7 @@ def call_openrouter(prompt: str, model: Optional[str] = None) -> Dict[str, Any]:
             "error": f"Network error: {str(e)}"
         }
     except Exception as e:
-        logger.exception("Unexpected error in OpenRouter client")
+        logger.exception(f"Unexpected error in OpenRouter client")
         return {
             "success": False,
             "error": f"Internal error: {str(e)}"
