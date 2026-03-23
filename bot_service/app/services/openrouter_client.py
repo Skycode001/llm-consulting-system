@@ -1,6 +1,7 @@
-import httpx
 import logging
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
+
+import httpx
 
 from app.core.config import settings
 
@@ -92,7 +93,7 @@ def call_openrouter(prompt: str, model: Optional[str] = None) -> Dict[str, Any]:
             "error": f"Network error: {str(e)}"
         }
     except Exception as e:
-        logger.exception(f"Unexpected error in OpenRouter client")
+        logger.exception("Unexpected error in OpenRouter client")
         return {
             "success": False,
             "error": f"Internal error: {str(e)}"

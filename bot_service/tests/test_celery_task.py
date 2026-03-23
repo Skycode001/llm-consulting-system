@@ -1,4 +1,3 @@
-import pytest
 from unittest.mock import patch
 
 from app.tasks.llm_tasks import llm_request
