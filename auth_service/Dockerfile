@@ -2,10 +2,21 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-RUN pip install uv
-
 COPY pyproject.toml .
-RUN uv pip install -r <(uv pip compile pyproject.toml)
+
+# Устанавливаем зависимости с фиксированной версией bcrypt
+RUN pip install --no-cache-dir \
+    fastapi \
+    uvicorn[standard] \
+    sqlalchemy \
+    aiosqlite \
+    pydantic[email] \
+    pydantic-settings \
+    python-jose[cryptography] \
+    passlib[bcrypt] \
+    python-multipart \
+    bcrypt==4.0.1 \
+    email-validator
 
 COPY . .
 
