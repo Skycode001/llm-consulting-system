@@ -72,6 +72,28 @@ services:
     networks:
       - llm-network
 
+  bot-polling:
+    build:
+      context: ./bot_service
+      dockerfile: Dockerfile
+    container_name: llm-bot-polling
+    env_file:
+      - ./bot_service/.env
+    depends_on:
+      - redis
+      - rabbitmq
+    restart: unless-stopped
+    networks:
+      - llm-network
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    command: python run_bot.py
+    extra_hosts:
+      - "api.telegram.org:149.154.167.220"
+      - "api.telegram.org:149.154.167.91"
+      - "api.telegram.org:149.154.167.92"
+
 networks:
   llm-network:
     driver: bridge
