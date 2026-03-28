@@ -195,6 +195,25 @@ docker-compose ps
 | `docker system prune -a --volumes` | Удалить все неиспользуемые образы, контейнеры и volumes (полная очистка) |
 | `docker rmi <image>` | Удалить конкретный образ |
 
+🐳 Сохранение и бэкап
+
+| Команда | Описание |
+|---------|----------|
+| `docker save <image_name> -o <filename>.tar` | Сохранить образ в tar-архив |
+| `docker load -i <filename>.tar` | Загрузить образ из tar-архива |
+
+Пример:
+```bash
+# Сохранить образ bot-service
+docker save llm-consulting-system-bot-service:latest -o bot-service-backup.tar
+# Сохранить образ auth-service
+docker save llm-consulting-system-auth-service:latest -o auth-service-backup.tar
+# Сохранить образ celery-worker
+docker save llm-consulting-system-celery-worker:latest -o celery-worker-backup.tar
+# Восстановить образ из архива
+docker load -i bot-service-backup.tar
+```
+
 ### 5. Запуск тестов
 Auth Service
 ```bash
