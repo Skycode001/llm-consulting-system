@@ -1,4 +1,5 @@
 import logging
+
 import httpx
 from celery import shared_task
 
