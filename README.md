@@ -113,6 +113,11 @@ llm-consulting-system/
 
 ## ⚙️ Установка и запуск
 
+### Проверка доступа к Telegram API (важно для корректной работы)
+```bash
+curl -I https://api.telegram.org
+```
+
 ### 1. Клонирование репозитория
 ```bash
 git clone https://github.com/Skycode001/llm-consulting-system.git
@@ -197,3 +202,155 @@ pytest tests/ -v
 | Bot Service Health | http://localhost:8001/health |
 | RabbitMQ Management | http://localhost:15672 (guest/guest) |
 
+## 🚀 Демонстрация работы
+
+### 1. Auth Service Swagger
+
+![Auth Service Swagger](Screenshots/Auth_service.png)
+
+![Auth Service Swagger](Screenshots/Swagger_registration1_1.png)
+
+![Auth Service Swagger](Screenshots/Swagger_registration1_2.png)
+
+Логика: 
+- /api/auth/register - регистрация логина и пароля
+- /api/auth/login - получения токена
+- Authorize - авторизация полученного токена
+- /api/auth/me - информация по токену
+- /health - проверка состояния
+
+### 2. Bot Service Swagger
+
+![Bot Service Swagger](Screenshots/Bot_service.png)
+
+Логика:
+- /health - проверка состояния
+- /health/redis - проверка состояния Redis
+- /health/rabbitmq - проверка состояния Rabbitmq
+
+### 3. Telegram - работа с ботом
+
+![Telehram](Screenshots/Bot_review.png)
+
+Вопрос к боту 1:
+
+![Telegram](Screenshots/Bot_question_1_2.png)
+
+Логи Celery на вопрос 1:
+```bash 
+docker-compose logs -f celery-worker
+```
+
+![Telegram](Screenshots/Bot_question_1_1.png)
+
+Вопрос к боту 2:
+
+![Telegram](Screenshots/Bot_question_2_1.png)
+
+Логи Celery на вопрос 2:
+```bash 
+docker-compose logs -f celery-worker
+```
+
+![Telegram](Screenshots/Bot_question_2_2.png)
+
+
+### 4. RabbitMQ Managment
+
+![RabbitMQ Managment](Screenshots/RabbitMQ_1.png)
+
+![RabbitMQ Managment](Screenshots/RabbitMQ_2.png)
+
+### 5. Тестирование auth_serice и bot_service
+Auth Service
+```bash
+cd auth_service && source .venv/bin/activate && pytest tests/ -v
+```
+
+![Auth Tests](Screenshots/Auth_tests.png)
+
+Bot Service
+```bash
+cd bot_service && source .venv/bin/activate && pytest tests/ -v
+```
+
+![Bot Tests](Screenshots/Bot_tests.png)
+
+### 6. Docker
+
+![Docker](Screenshots/Docker1.png)
+
+![Docker](Screenshots/Docker2.png)
+
+## 🔧 API Endpoints
+
+### Auth Service
+
+| Метод | Эндпоинт | Описание | Доступ |
+|-------|----------|----------|--------|
+| `POST` | `/api/auth/register` | Регистрация пользователя | Публичный |
+| `POST` | `/api/auth/login` | Вход, получение JWT | Публичный |
+| `GET` | `/api/auth/me` | Профиль текущего пользователя | Требует JWT |
+| `GET` | `/health` | Проверка работоспособности | Публичный |
+
+### Bot Service
+
+| Метод | Эндпоинт | Описание | Доступ |
+|-------|----------|----------|--------|
+| `GET` | `/health` | Проверка работоспособности | Публичный |
+| `GET` | `/health/redis` | Статус Redis | Публичный |
+| `GET` | `/health/rabbitmq` | Статус RabbitMQ | Публичный |
+
+### Telegram-бот
+
+| Команда | Описание |
+|---------|----------|
+| `/start` | Приветственное сообщение, инструкция |
+| `/token <JWT>` | Сохранение JWT токена в Redis |
+| `/status` | Проверка статуса авторизации |
+| `/help` | Справка по командам |
+
+![Bot Help](Screenshots/Bot_help.png)
+
+## 🔧 Форматирование и линтинг
+
+# Auth Service
+```bash
+cd auth_service
+ruff check .
+ruff format .
+```
+
+# Bot Service
+```bash
+cd bot_service
+ruff check .
+ruff format .
+```
+
+## 🔧 Переменные окружения
+
+### Auth Service
+
+| Переменная | Описание | Пример |
+|------------|----------|--------|
+| `APP_NAME` | Название приложения | `auth-service` |
+| `ENV` | Окружение | `local` |
+| `JWT_SECRET` | Секретный ключ для JWT | `change_me_super_secret_key_2026` |
+| `JWT_ALG` | Алгоритм JWT | `HS256` |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | Время жизни токена | `60` |
+| `SQLITE_PATH` | Путь к БД | `./auth.db` |
+
+### Bot Service
+
+| Переменная | Описание | Пример |
+|------------|----------|--------|
+| `APP_NAME` | Название приложения | `bot-service` |
+| `ENV` | Окружение | `local` |
+| `TELEGRAM_BOT_TOKEN` | Токен от @BotFather | `1234567890:ABCdefGHIjkl...` |
+| `JWT_SECRET` | Секретный ключ (должен совпадать с Auth) | `change_me_super_secret_key_2026` |
+| `JWT_ALG` | Алгоритм JWT | `HS256` |
+| `REDIS_URL` | URL Redis | `redis://redis:6379/0` |
+| `RABBITMQ_URL` | URL RabbitMQ | `amqp://guest:guest@rabbitmq:5672//` |
+| `OPENROUTER_API_KEY` | API ключ OpenRouter | `sk-or-v1-...` |
+| `OPENROUTER_MODEL` | Модель LLM | `deepseek/deepseek-chat-v3.1:free` |

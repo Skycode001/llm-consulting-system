@@ -1,4 +1,4 @@
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from app.tasks.llm_tasks import llm_request
 
@@ -9,16 +9,26 @@ class TestCeleryTask:
     def test_llm_request_success(self):
         """Тест успешного выполнения LLM задачи"""
         with patch("app.tasks.llm_tasks.call_openrouter") as mock_call:
-            mock_call.return_value = {
-                "success": True,
-                "content": "Тестовый ответ от LLM"
-            }
-            
-            result = llm_request(12345, "Тестовый вопрос")
-            
-            assert result["success"] is True
-            assert result["chat_id"] == 12345
-            assert result["response"] == "Тестовый ответ от LLM"
+            with patch("app.tasks.llm_tasks.httpx.Client") as mock_httpx:
+                # Мокаем успешный ответ от OpenRouter
+                mock_call.return_value = {
+                    "success": True,
+                    "content": "Тестовый ответ от LLM"
+                }
+                
+                # Мокаем успешную отправку в Telegram
+                mock_client = MagicMock()
+                mock_response = MagicMock()
+                mock_response.status_code = 200
+                mock_client.post.return_value = mock_response
+                mock_httpx.return_value.__enter__.return_value = mock_client
+                
+                result = llm_request(12345, "Тестовый вопрос")
+                
+                assert result["success"] is True
+                assert result["chat_id"] == 12345
+                assert result["response"] == "Тестовый ответ от LLM"
+                assert result["sent"] is True
     
     def test_llm_request_failure(self):
         """Тест неудачного выполнения LLM задачи"""
@@ -47,6 +57,7 @@ class TestCeleryTask:
     
     def test_llm_request_retry_on_failure(self):
         """Тест повторной попытки при ошибке"""
+        # Тест проверяет, что задача возвращает ошибку (retry логика обрабатывается Celery)
         with patch("app.tasks.llm_tasks.call_openrouter") as mock_call:
             mock_call.return_value = {
                 "success": False,
