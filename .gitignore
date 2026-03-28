@@ -142,3 +142,5 @@ docs/_templates/
 # Docker
 docker-compose.override.yml
 *.pid
+
+*.tar

@@ -71,6 +71,12 @@ services:
     restart: unless-stopped
     networks:
       - llm-network
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    extra_hosts:
+      - "openrouter.ai:8.6.112.0"
+      - "openrouter.ai:8.47.69.0"
 
   bot-polling:
     build:
@@ -93,6 +99,8 @@ services:
       - "api.telegram.org:149.154.167.220"
       - "api.telegram.org:149.154.167.91"
       - "api.telegram.org:149.154.167.92"
+      - "openrouter.ai:8.6.112.0"
+      - "openrouter.ai:8.47.69.0"
 
 networks:
   llm-network:
