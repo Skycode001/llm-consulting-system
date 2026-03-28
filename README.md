@@ -195,6 +195,9 @@ docker-compose ps
 | `docker system prune -a --volumes` | Удалить все неиспользуемые образы, контейнеры и volumes (полная очистка) |
 | `docker rmi <image>` | Удалить конкретный образ |
 
+Пример:
+![Docker coomands](Screenshots/Docker_commands.png)
+
 🐳 Сохранение и бэкап
 
 | Команда | Описание |
