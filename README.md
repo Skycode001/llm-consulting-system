@@ -5,7 +5,16 @@
 ## 🏗️ Архитектура проекта
 ```
 llm-consulting-system/
+├── docker-compose.yml # Оркестрация всех сервисов
+├── Makefile # Утилиты для сборки и запуска
+├── .gitignore # Игнорируемые файлы
+├── llm-consulting-system.code-workspace 
+│
 ├── auth_service/ # Сервис аутентификации (FastAPI)
+│ ├── Dockerfile # Сборка образа Auth Service
+│ ├── pyproject.toml # Зависимости (uv)
+│ ├── pytest.ini # Настройки тестирования
+│ ├── .env # Переменные окружения
 │ ├── app/
 │ │ ├── main.py # Точка входа FastAPI, lifespan, health check
 │ │ ├── core/
@@ -27,11 +36,18 @@ llm-consulting-system/
 │ │ ├── deps.py # Зависимости: get_db, get_current_user
 │ │ ├── routes_auth.py # Эндпоинты /auth/register, /auth/login, /auth/me
 │ │ └── router.py # Сборка роутеров
-│ ├── tests/ # Модульные и интеграционные тесты
-│ ├── pyproject.toml # Зависимости (uv)
-│ └── .env # Переменные окружения
+│ └── tests/
+│ ├── test_security.py # Модульные тесты JWT и хеширования
+│ └── test_auth_integration.py # Интеграционные тесты API
 │
 ├── bot_service/ # Сервис Telegram-бота (aiogram + Celery)
+│ ├── Dockerfile # Сборка образа Bot Service (FastAPI)
+│ ├── Dockerfile.celery # Сборка образа Celery worker
+│ ├── Dockerfile.polling # Сборка образа для polling Telegram бота
+│ ├── pyproject.toml # Зависимости (uv)
+│ ├── pytest.ini # Настройки тестирования
+│ ├── .env # Переменные окружения
+│ ├── run_bot.py # Точка входа для запуска polling
 │ ├── app/
 │ │ ├── main.py # FastAPI для health checks
 │ │ ├── core/
@@ -49,12 +65,135 @@ llm-consulting-system/
 │ │ │ └── handlers.py # Обработчики: /start, /token, /status, текстовые сообщения
 │ │ └── api/
 │ │ └── health.py # Health check эндпоинты
-│ ├── tests/ # Тесты: JWT, handlers, OpenRouter, Redis, Celery
-│ ├── run_bot.py # Точка входа для запуска polling
-│ ├── celery_worker.py # Точка входа для Celery worker
-│ ├── pyproject.toml # Зависимости (uv)
-│ └── .env # Переменные окружения
-│
-├── docker-compose.yml # Оркестрация всех сервисов
-└── .gitignore # Игнорируемые файлы
+│ └── tests/
+│ ├── conftest.py # Фикстуры для тестов (mock_redis, mock_celery)
+│ ├── test_jwt.py # Тесты JWT валидации
+│ ├── test_handlers.py # Тесты обработчиков Telegram
+│ ├── test_openrouter.py # Тесты OpenRouter клиента (respx)
+│ ├── test_redis.py # Тесты Redis операций (fakeredis)
+│ ├── test_celery_task.py # Тесты Celery задач
+│ └── test_health.py # Тесты health check эндпоинтов
 ```
+
+
+## 🔧 Технологии
+
+| Компонент | Технология | Назначение |
+|-----------|------------|------------|
+| **Auth Service** | FastAPI, SQLAlchemy, SQLite | Регистрация, логин, выпуск JWT |
+| **Bot Service** | aiogram | Telegram-бот |
+| **Очередь задач** | Celery + RabbitMQ | Асинхронная обработка LLM-запросов |
+| **Кэш/Хранилище** | Redis | Хранение JWT, привязанных к tg_user_id |
+| **LLM** | OpenRouter API | Доступ к языковым моделям |
+| **Контейнеризация** | Docker, Docker Compose | Запуск всех сервисов |
+| **Управление зависимостями** | uv | Быстрая установка пакетов |
+
+## 🎯 Ключевые архитектурные решения
+
+### 1. Разделение ответственности
+- **Auth Service** — только управление пользователями и выпуск JWT
+- **Bot Service** — только проверка JWT и работа с Telegram
+- Bot Service **не знает** о пользователях, паролях и механизмах регистрации
+- Bot Service доверяет только корректно подписанному и не истёкшему JWT
+
+### 2. JWT как единственный механизм авторизации
+- Токен создаётся **только** в Auth Service
+- Bot Service **только проверяет** подпись и срок действия
+- JWT содержит поля: `sub` (id пользователя), `role`, `iat`, `exp`
+
+### 3. Асинхронная обработка LLM-запросов
+- Запросы к LLM **не выполняются** напрямую в хэндлерах Telegram
+- Bot Service публикует задачу в RabbitMQ
+- Celery worker забирает задачу, вызывает OpenRouter, отправляет ответ в Telegram
+
+### 4. Полноценное использование RabbitMQ и Redis
+- **RabbitMQ** — брокер задач Celery
+- **Redis** — хранилище JWT, привязанных к Telegram user_id
+- Оба сервиса реально участвуют в обработке (не «для галочки»)
+
+## ⚙️ Установка и запуск
+
+### 1. Клонирование репозитория
+```bash
+git clone https://github.com/Skycode001/llm-consulting-system.git
+cd llm-consulting-system
+```
+### 2. Настройка переменных окружения
+Auth Service (auth_service/.env):
+```bash
+APP_NAME=auth-service
+ENV=local
+JWT_SECRET=change_me_super_secret_key_2026
+JWT_ALG=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=60
+SQLITE_PATH=./auth.db
+```
+
+Bot Service (bot_service/.env):
+```bash
+APP_NAME=bot-service
+ENV=local
+TELEGRAM_BOT_TOKEN=ВАШ_ТОКЕН_ОТ_BOTFATHER
+JWT_SECRET=change_me_super_secret_key_2026
+JWT_ALG=HS256
+REDIS_URL=redis://redis:6379/0
+RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672//
+OPENROUTER_API_KEY=ВАШ_КЛЮЧ_OPENROUTER
+OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
+OPENROUTER_MODEL=deepseek/deepseek-chat-v3.1:free #(или другая модель)
+OPENROUTER_SITE_URL=https://example.com
+OPENROUTER_APP_NAME=bot-service
+```
+
+### 3. Установка зависимостей (локально, для разработки)
+Auth Service
+```bash
+cd auth_service
+uv venv
+source .venv/bin/activate
+uv pip install -r <(uv pip compile pyproject.toml)
+```
+
+Bot Service
+```bash
+cd ../bot_service
+uv venv
+source .venv/bin/activate
+uv pip install -r <(uv pip compile pyproject.toml)
+```
+
+### 4. Запуск через Docker (рекомендуется)
+```bash
+docker-compose up -d --build
+docker-compose ps
+```
+Все 6 контейнеров должны быть в статусе Up:
+- llm-redis
+- llm-rabbitmq
+- llm-auth
+- llm-bot
+- llm-celery
+- llm-bot-polling
+
+### 5. Запуск тестов
+Auth Service
+```bash
+cd auth_service
+source .venv/bin/activate
+pytest tests/ -v
+```
+
+Bot Service
+```bash
+cd bot_service
+source .venv/bin/activate
+pytest tests/ -v
+```
+
+### 6. Доступ к сервисам
+| Сервис | URL |
+|--------|-----|
+| Auth Service Swagger | http://localhost:8000/docs |
+| Bot Service Health | http://localhost:8001/health |
+| RabbitMQ Management | http://localhost:15672 (guest/guest) |
+
