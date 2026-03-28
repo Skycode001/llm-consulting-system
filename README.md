@@ -180,6 +180,21 @@ docker-compose ps
 - llm-celery
 - llm-bot-polling
 
+🐳 Основные команды Docker
+
+| Команда | Описание |
+|---------|----------|
+| `docker-compose up -d --build` | Собрать образы и запустить все контейнеры в фоновом режиме |
+| `docker-compose up -d` | Запустить контейнеры без пересборки |
+| `docker-compose down` | Остановить и удалить все контейнеры |
+| `docker-compose down -v` | Остановить контейнеры и удалить volumes (очистить данные Redis/RabbitMQ) |
+| `docker-compose ps` | Показать статус всех контейнеров |
+| `docker-compose logs -f` | Показать логи всех контейнеров в реальном времени |
+| `docker-compose logs <service>` | Показать логи конкретного сервиса (например, `bot-polling`) |
+| `docker images` | Список всех Docker образов |
+| `docker system prune -a --volumes` | Удалить все неиспользуемые образы, контейнеры и volumes (полная очистка) |
+| `docker rmi <image>` | Удалить конкретный образ |
+
 ### 5. Запуск тестов
 Auth Service
 ```bash
