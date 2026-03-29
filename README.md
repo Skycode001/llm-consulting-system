@@ -2,7 +2,7 @@
 
 Распределённая система, состоящая из двух логически и технически независимых сервисов. Архитектура построена по принципу разделения ответственности: Auth Service отвечает исключительно за аутентификацию и выпуск JWT-токенов, Bot Service — за предоставление функциональности LLM-консультаций через Telegram-бота с использованием асинхронной очереди задач.
 
-## 🏗️ Архитектура проекта
+## ⚙️ Архитектура проекта
 ```
 llm-consulting-system/
 ├── docker-compose.yml # Оркестрация всех сервисов
@@ -145,7 +145,7 @@ REDIS_URL=redis://redis:6379/0
 RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672//
 OPENROUTER_API_KEY=ВАШ_КЛЮЧ_OPENROUTER
 OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
-OPENROUTER_MODEL=deepseek/deepseek-chat-v3.1:free #(или другая модель)
+OPENROUTER_MODEL=stepfun/step-3.5-flash:free #(или другая модель)
 OPENROUTER_SITE_URL=https://example.com
 OPENROUTER_APP_NAME=bot-service
 ```
@@ -267,7 +267,7 @@ pytest tests/ -v
 
 ### 3. Telegram - работа с ботом
 
-![Telehram](Screenshots/Bot_review.png)
+![Telegram](Screenshots/Bot_review.png)
 
 Вопрос к боту 1:
 
@@ -390,4 +390,4 @@ ruff format .
 | `REDIS_URL` | URL Redis | `redis://redis:6379/0` |
 | `RABBITMQ_URL` | URL RabbitMQ | `amqp://guest:guest@rabbitmq:5672//` |
 | `OPENROUTER_API_KEY` | API ключ OpenRouter | `sk-or-v1-...` |
-| `OPENROUTER_MODEL` | Модель LLM | `deepseek/deepseek-chat-v3.1:free` |
+| `OPENROUTER_MODEL` | Модель LLM | `stepfun/step-3.5-flash:free` |
